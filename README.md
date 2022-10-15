@@ -1,3 +1,12 @@
 <h3 align="center">Notepad</h3>
 <p align="center">An example project demonstrating the Puter Cloud.js SDK</p>
 <hr>
+
+### Getting Started
+Follow the steps below to deploy Notepad as an app on Puter,
+
+1) Go to <a href="https://puter.com">Puter.com</a>
+2) Right click on desktop and choose **New Folder**.
+3) Upload the contents of this repository to the folder you created in step 2.
+4) Right click on the folder you created in step 2 and choose **Create App**.
+5) Follow the steps and you're app will be up and running in a few seconds.
