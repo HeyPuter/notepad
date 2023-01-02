@@ -4,6 +4,7 @@ const save_button = document.getElementById('save-button');
 const save_as_button = document.getElementById('save-as-button');
 const font_button = document.getElementById('font-button');
 const background_color_button = document.getElementById('background-color-button');
+const font_color_button = document.getElementById('font-color-button');
 const exit_button = document.getElementById('exit-button');
 const editor = document.getElementById('editor');
 
@@ -98,6 +99,21 @@ background_color_button.addEventListener('click', async (event) => {
     // If a color was selected in previous step, change the editor background to it
     if(new_color)
         editor.style.backgroundColor = new_color;
+
+});
+
+//----------------------------------------------------
+// 'Font Color' button clicked
+//----------------------------------------------------
+font_color_button.addEventListener('click', async (event) => {
+
+    // Show the 'Color Picker' dialog to allow user to pick a color.
+    const new_color = await cloud.showColorPicker();
+
+    // If a color was selected in previous step, change the editor background to it
+    if(new_color)
+        editor.style.color = new_color;
+        cloud.setItem("color", new_color);
 
 });
 
