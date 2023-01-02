@@ -37,6 +37,21 @@ const cloud = new Cloud({
 });
 
 //----------------------------------------------------
+// Fetch settings
+//----------------------------------------------------
+cloud.getItem('font').then((value)=>{
+    editor.style.fontFamily = value;
+});
+
+cloud.getItem('bg-color').then((value)=>{
+    editor.style.backgroundColor = value;
+});
+
+cloud.getItem('color').then((value)=>{
+    editor.style.color = value;
+});
+
+//----------------------------------------------------
 // 'Open' button clicked
 //----------------------------------------------------
 open_button.addEventListener('click', async () => {
@@ -85,6 +100,7 @@ font_button.addEventListener('click', async () => {
     // If a font was selected in previous step, change the editor font to it
     if(new_font)
         editor.style.fontFamily = new_font.fontFamily;
+        cloud.setItem("font", new_font.fontFamily);
 
 });
 
@@ -99,6 +115,7 @@ background_color_button.addEventListener('click', async (event) => {
     // If a color was selected in previous step, change the editor background to it
     if(new_color)
         editor.style.backgroundColor = new_color;
+        cloud.setItem("bg-color", new_color);
 
 });
 
