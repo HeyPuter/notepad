@@ -8,6 +8,9 @@ const font_color_button = document.getElementById('font-color-button');
 const exit_button = document.getElementById('exit-button');
 const editor = document.getElementById('editor');
 
+// this variable tracks whether the content of the editor has changed since the last save
+let unsaved_changes = false;
+
 // Holds the handle to the file that is currently open in Notepad
 let open_file;
 
@@ -77,6 +80,8 @@ save_button.addEventListener('click', async () => {
     else
         open_file = await cloud.showSaveFilePicker(editor.value, 'Untitled.txt');
 
+    // Set unsaved_changes to false since the file has been saved
+    unsaved_changes = false;
 });
 
 //----------------------------------------------------
@@ -147,11 +152,19 @@ font_color_button.addEventListener('click', async (event) => {
 });
 
 //----------------------------------------------------
+// Track changes to the editor. If the user makes any changes, 
+// set the unsaved_changes variable to true.
+//----------------------------------------------------
+editor.addEventListener('input', function (event) {
+    unsaved_changes = true;
+});
+
+//----------------------------------------------------
 // 'Exit' button clicked
 //----------------------------------------------------
 exit_button.addEventListener('click', async (event) => {
     // If a file was opened, prompt the user to save
-    if (open_file) {
+    if (unsaved_changes) {
         cloud.alert('You have unsaved changes! Exit anyway?', [
             {
                 label: 'Exit',
@@ -167,20 +180,26 @@ exit_button.addEventListener('click', async (event) => {
                 label: 'Cancel',
                 value: 'cancel'
             },
-        ]).then((resp) => {
+        ]).then(async (resp) => {
             if (resp == "exit") {
-                cloud.exit(); // Close the window and exit Notepad
-            } else if (resp == "save") {
-                open_file.write(editor.value); // Overwrite the file with the contents of the editor
-                
-                // Wait half a second to let the file finish writing
-                setTimeout(function(){
-                    cloud.exit(); // Close the window and exit Notepad
-                },500);
+                // Close the window and exit Notepad
+                cloud.exit();
+            } else if (resp === "save") {
+                // if a file is already open, overwrite the file with the contents of the editor
+                if(open_file){
+                    await open_file.write(editor.value);
+                }
+                // No file was opened, show the 'Save File' dialog to allow user to save the file to their Puter account
+                else{
+                    open_file = await cloud.showSaveFilePicker(editor.value, 'Untitled.txt');
+                }
+                // Once file is saved close the window and exit Notepad
+                cloud.exit();
             }
         });
     } else {
-        cloud.exit(); // Otherwise, close the window and exit Notepad without prompting
+        // Otherwise, close the window and exit Notepad without prompting the user
+        cloud.exit();
     }
 
 });
