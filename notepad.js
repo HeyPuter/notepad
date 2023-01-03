@@ -4,6 +4,7 @@ const save_button = document.getElementById('save-button');
 const save_as_button = document.getElementById('save-as-button');
 const font_button = document.getElementById('font-button');
 const background_color_button = document.getElementById('background-color-button');
+const font_color_button = document.getElementById('font-color-button');
 const exit_button = document.getElementById('exit-button');
 const editor = document.getElementById('editor');
 
@@ -33,6 +34,21 @@ const cloud = new Cloud({
 
     }
 
+});
+
+//----------------------------------------------------
+// Fetch settings
+//----------------------------------------------------
+cloud.getItem('font').then((value)=>{
+    editor.style.fontFamily = value;
+});
+
+cloud.getItem('bg-color').then((value)=>{
+    editor.style.backgroundColor = value;
+});
+
+cloud.getItem('color').then((value)=>{
+    editor.style.color = value;
 });
 
 //----------------------------------------------------
@@ -83,7 +99,12 @@ font_button.addEventListener('click', async () => {
 
     // If a font was selected in previous step, change the editor font to it
     if(new_font)
+
+        // Set editor font
         editor.style.fontFamily = new_font.fontFamily;
+
+        // Save setting
+        cloud.setItem("font", new_font.fontFamily);
 
 });
 
@@ -97,7 +118,31 @@ background_color_button.addEventListener('click', async (event) => {
 
     // If a color was selected in previous step, change the editor background to it
     if(new_color)
+        
+        // Set editor background color
         editor.style.backgroundColor = new_color;
+
+        // Save setting
+        cloud.setItem("bg-color", new_color);
+
+});
+
+//----------------------------------------------------
+// 'Font Color' button clicked
+//----------------------------------------------------
+font_color_button.addEventListener('click', async (event) => {
+
+    // Show the 'Color Picker' dialog to allow user to pick a color.
+    const new_color = await cloud.showColorPicker();
+
+    // If a color was selected in previous step, change the editor background to it
+    if(new_color)
+
+        // Set editor font color
+        editor.style.color = new_color;
+
+        // Save setting
+        cloud.setItem("color", new_color);
 
 });
 
@@ -105,8 +150,37 @@ background_color_button.addEventListener('click', async (event) => {
 // 'Exit' button clicked
 //----------------------------------------------------
 exit_button.addEventListener('click', async (event) => {
-
-    // Close the window and exit Notepad
-    cloud.exit();
+    // If a file was opened, prompt the user to save
+    if (open_file) {
+        cloud.alert('You have unsaved changes! Exit anyway?', [
+            {
+                label: 'Exit',
+                value: 'exit',
+                type: 'danger',
+            },
+            {
+                label: 'Save',
+                value: 'save',
+                type: 'primary',
+            },
+            {
+                label: 'Cancel',
+                value: 'cancel'
+            },
+        ]).then((resp) => {
+            if (resp == "exit") {
+                cloud.exit(); // Close the window and exit Notepad
+            } else if (resp == "save") {
+                open_file.write(editor.value); // Overwrite the file with the contents of the editor
+                
+                // Wait half a second to let the file finish writing
+                setTimeout(function(){
+                    cloud.exit(); // Close the window and exit Notepad
+                },500);
+            }
+        });
+    } else {
+        cloud.exit(); // Otherwise, close the window and exit Notepad without prompting
+    }
 
 });
