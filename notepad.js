@@ -21,7 +21,7 @@ const cloud = new Cloud({
     // This optional event-handler function is called right before this app's window is about to close
     // For example, when user clicks the close button ('X') on the window
     onWindowClose: function(){
-        this.exit();
+        attempt_exit();
     },
 
     // This optional event-handler function is called when an item is opened using this app
@@ -152,8 +152,11 @@ font_color_button.addEventListener('click', async (event) => {
 });
 
 //----------------------------------------------------
-// Track changes to the editor. If the user makes any changes, 
-// set the unsaved_changes variable to true.
+// Track changes to the editor. If the user inputs anything in the editor, 
+// set the unsaved_changes variable to true. This is a naive implementation
+// and for demonstration purposes only. In a real-world application, you should
+// check to see if the content of the editor has actually changed before setting
+// unsaved_changes to true.
 //----------------------------------------------------
 editor.addEventListener('input', function (event) {
     unsaved_changes = true;
@@ -163,7 +166,15 @@ editor.addEventListener('input', function (event) {
 // 'Exit' button clicked
 //----------------------------------------------------
 exit_button.addEventListener('click', async (event) => {
-    // If a file was opened, prompt the user to save
+    attempt_exit();
+});
+
+//----------------------------------------------------
+// A function that attempts to exit the app. If there are any unsaved changes,
+// it will prompt the user to save the file before exiting.
+//----------------------------------------------------
+attempt_exit = function() {
+    // If there are any unsaved changes, prompt the user to save the file before closing the window
     if (unsaved_changes) {
         cloud.alert('You have unsaved changes! Exit anyway?', [
             {
@@ -200,6 +211,5 @@ exit_button.addEventListener('click', async (event) => {
     } else {
         // Otherwise, close the window and exit Notepad without prompting the user
         cloud.exit();
-    }
-
-});
+    }    
+}
