@@ -8,49 +8,37 @@ const font_color_button = document.getElementById('font-color-button');
 const exit_button = document.getElementById('exit-button');
 const editor = document.getElementById('editor');
 
-// this variable tracks whether the content of the editor has changed since the last save
+// This variable tracks whether the content of the editor has changed since the last save
 let unsaved_changes = false;
 
 // Holds the handle to the file that is currently open in Notepad
 let open_file;
 
-// Instantiate a Cloud.JS object. Cloud.JS is the official SDK for Puter that allows you to build
-// cloud-native applications within the Puter.com environment.
-const cloud = new Cloud({
+// Sets an event-handler function that is called when an item is opened using this app.
+// For example, when user double click on a text file or a text file is dragged and dropped 
+// onto the Notepad.
+puter.onItemsOpened(async function(items){
+    
+    // open_file is now items[0]
+    open_file = items[0];
 
-    // This optional event-handler function is called right before this app's window is about to close
-    // For example, when user clicks the close button ('X') on the window
-    onWindowClose: function(){
-        attempt_exit();
-    },
+    // Load the content of the opened file into the editor. 
+    editor.value = await open_file.text();
 
-    // This optional event-handler function is called when an item is opened using this app
-    // For example, when user double click on a text file or a text file is dragged and dropped 
-    // onto the Notepad.
-    onItemsOpened: async function(items){
-        
-        // open_file is now items[0]
-        open_file = items[0];
-
-        // Load the content of the opened file into the editor. 
-        editor.value = await open_file.text();
-
-    }
-
-});
+})
 
 //----------------------------------------------------
 // Fetch settings
 //----------------------------------------------------
-cloud.getItem('font').then((value)=>{
+puter.getItem('font').then((value)=>{
     editor.style.fontFamily = value;
 });
 
-cloud.getItem('bg-color').then((value)=>{
+puter.getItem('bg-color').then((value)=>{
     editor.style.backgroundColor = value;
 });
 
-cloud.getItem('color').then((value)=>{
+puter.getItem('color').then((value)=>{
     editor.style.color = value;
 });
 
@@ -60,7 +48,7 @@ cloud.getItem('color').then((value)=>{
 open_button.addEventListener('click', async () => {
 
     // Display the 'Open File Picker' allowing the user to select and open a file from their Puter account 
-    open_file = await cloud.showOpenFilePicker();
+    open_file = await puter.showOpenFilePicker();
 
     // Load the content of the opened file into the editor
     editor.value = await open_file.text();
@@ -78,7 +66,7 @@ save_button.addEventListener('click', async () => {
 
     // If no file is open (i.e. this document was written from scratch) show the 'Save File' dialog
     else
-        open_file = await cloud.showSaveFilePicker(editor.value, 'Untitled.txt');
+        open_file = await puter.showSaveFilePicker(editor.value, 'Untitled.txt');
 
     // Set unsaved_changes to false since the file has been saved
     unsaved_changes = false;
@@ -90,7 +78,7 @@ save_button.addEventListener('click', async () => {
 save_as_button.addEventListener('click', async () => {
 
     // Display the 'Save File Picker' dialog to allow user to save the file to their Puter account
-    open_file = await cloud.showSaveFilePicker(editor.value, open_file ? open_file.name : 'Untitled.txt');
+    open_file = await puter.showSaveFilePicker(editor.value, open_file ? open_file.name : 'Untitled.txt');
 
 });
 
@@ -100,7 +88,7 @@ save_as_button.addEventListener('click', async () => {
 font_button.addEventListener('click', async () => {
 
     // Show the 'Font Picker' dialog to allow user to pick a font.
-    const new_font = await cloud.showFontPicker();
+    const new_font = await puter.showFontPicker();
 
     // If a font was selected in previous step, change the editor font to it
     if(new_font)
@@ -109,7 +97,7 @@ font_button.addEventListener('click', async () => {
         editor.style.fontFamily = new_font.fontFamily;
 
         // Save setting
-        cloud.setItem("font", new_font.fontFamily);
+        puter.setItem("font", new_font.fontFamily);
 
 });
 
@@ -119,7 +107,7 @@ font_button.addEventListener('click', async () => {
 background_color_button.addEventListener('click', async (event) => {
 
     // Show the 'Color Picker' dialog to allow user to pick a color.
-    const new_color = await cloud.showColorPicker();
+    const new_color = await puter.showColorPicker();
 
     // If a color was selected in previous step, change the editor background to it
     if(new_color)
@@ -128,7 +116,7 @@ background_color_button.addEventListener('click', async (event) => {
         editor.style.backgroundColor = new_color;
 
         // Save setting
-        cloud.setItem("bg-color", new_color);
+        puter.setItem("bg-color", new_color);
 
 });
 
@@ -138,7 +126,7 @@ background_color_button.addEventListener('click', async (event) => {
 font_color_button.addEventListener('click', async (event) => {
 
     // Show the 'Color Picker' dialog to allow user to pick a color.
-    const new_color = await cloud.showColorPicker();
+    const new_color = await puter.showColorPicker();
 
     // If a color was selected in previous step, change the editor background to it
     if(new_color)
@@ -147,7 +135,7 @@ font_color_button.addEventListener('click', async (event) => {
         editor.style.color = new_color;
 
         // Save setting
-        cloud.setItem("color", new_color);
+        puter.setItem("color", new_color);
 
 });
 
@@ -169,6 +157,7 @@ exit_button.addEventListener('click', async (event) => {
     attempt_exit();
 });
 
+
 //----------------------------------------------------
 // A function that attempts to exit the app. If there are any unsaved changes,
 // it will prompt the user to save the file before exiting.
@@ -176,7 +165,7 @@ exit_button.addEventListener('click', async (event) => {
 attempt_exit = function() {
     // If there are any unsaved changes, prompt the user to save the file before closing the window
     if (unsaved_changes) {
-        cloud.alert('You have unsaved changes! Exit anyway?', [
+        puter.alert('You have unsaved changes! Exit anyway?', [
             {
                 label: 'Exit',
                 value: 'exit',
@@ -194,7 +183,7 @@ attempt_exit = function() {
         ]).then(async (resp) => {
             if (resp == "exit") {
                 // Close the window and exit Notepad
-                cloud.exit();
+                puter.exit();
             } else if (resp === "save") {
                 // if a file is already open, overwrite the file with the contents of the editor
                 if(open_file){
@@ -202,14 +191,20 @@ attempt_exit = function() {
                 }
                 // No file was opened, show the 'Save File' dialog to allow user to save the file to their Puter account
                 else{
-                    open_file = await cloud.showSaveFilePicker(editor.value, 'Untitled.txt');
+                    open_file = await puter.showSaveFilePicker(editor.value, 'Untitled.txt');
                 }
                 // Once file is saved close the window and exit Notepad
-                cloud.exit();
+                puter.exit();
             }
         });
     } else {
         // Otherwise, close the window and exit Notepad without prompting the user
-        cloud.exit();
+        puter.exit();
     }    
 }
+
+// Set a handler that is called right before this app's window is about to close.
+// For example, when user clicks the close button ('X') on the window.
+puter.onWindowClose(function(){
+    attempt_exit();
+})
