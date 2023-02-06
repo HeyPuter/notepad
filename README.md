@@ -1,5 +1,6 @@
 <h3 align="center">Notepad</h3>
 <p align="center">An example project demonstrating the Puter.JS SDK</p>
+<p align="center"><a href="https://docs.puter.com/">SDK Documentation</a>
 <hr>
 
 ### Demo
