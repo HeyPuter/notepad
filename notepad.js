@@ -6,6 +6,7 @@ const font_button = document.getElementById('font-button');
 const background_color_button = document.getElementById('background-color-button');
 const font_color_button = document.getElementById('font-color-button');
 const exit_button = document.getElementById('exit-button');
+const speak_button = document.getElementById('speak-button');
 const editor = document.getElementById('editor');
 
 // This variable tracks whether the content of the editor has changed since the last save
@@ -17,28 +18,28 @@ let open_file;
 // Sets an event-handler function that is called when an item is opened using this app.
 // For example, when user double click on a text file or a text file is dragged and dropped 
 // onto the Notepad.
-puter.onItemsOpened(async function(items){
+puter.ui.onLaunchedWithItems(async function(items){
     
     // open_file is now items[0]
     open_file = items[0];
 
     // Load the content of the opened file into the editor. 
-    editor.value = await open_file.text();
+    editor.value = await open_file.read();
 
 })
 
 //----------------------------------------------------
 // Fetch settings
 //----------------------------------------------------
-puter.getItem('font').then((value)=>{
+puter.kv.get('font').then((value)=>{
     editor.style.fontFamily = value;
 });
 
-puter.getItem('bg-color').then((value)=>{
+puter.kv.get('bg-color').then((value)=>{
     editor.style.backgroundColor = value;
 });
 
-puter.getItem('color').then((value)=>{
+puter.kv.get('color').then((value)=>{
     editor.style.color = value;
 });
 
@@ -48,10 +49,10 @@ puter.getItem('color').then((value)=>{
 open_button.addEventListener('click', async () => {
 
     // Display the 'Open File Picker' allowing the user to select and open a file from their Puter account 
-    open_file = await puter.showOpenFilePicker();
+    open_file = await puter.ui.showOpenFilePicker();
 
     // Load the content of the opened file into the editor
-    editor.value = await open_file.text();
+    editor.value = await (await open_file.read()).text();
 
 });
 
@@ -66,7 +67,7 @@ save_button.addEventListener('click', async () => {
 
     // If no file is open (i.e. this document was written from scratch) show the 'Save File' dialog
     else
-        open_file = await puter.showSaveFilePicker(editor.value, 'Untitled.txt');
+        open_file = await puter.ui.showSaveFilePicker(editor.value, 'Untitled.txt');
 
     // Set unsaved_changes to false since the file has been saved
     unsaved_changes = false;
@@ -78,7 +79,7 @@ save_button.addEventListener('click', async () => {
 save_as_button.addEventListener('click', async () => {
 
     // Display the 'Save File Picker' dialog to allow user to save the file to their Puter account
-    open_file = await puter.showSaveFilePicker(editor.value, open_file ? open_file.name : 'Untitled.txt');
+    open_file = await puter.ui.showSaveFilePicker(editor.value, open_file ? open_file.name : 'Untitled.txt');
 
 });
 
@@ -88,17 +89,17 @@ save_as_button.addEventListener('click', async () => {
 font_button.addEventListener('click', async () => {
 
     // Show the 'Font Picker' dialog to allow user to pick a font.
-    const new_font = await puter.showFontPicker();
+    const new_font = await puter.ui.showFontPicker();
 
     // If a font was selected in previous step, change the editor font to it
-    if(new_font)
+    if(new_font){
 
         // Set editor font
         editor.style.fontFamily = new_font.fontFamily;
 
         // Save setting
-        puter.setItem("font", new_font.fontFamily);
-
+        puter.kv.set("font", new_font.fontFamily);
+    }
 });
 
 //----------------------------------------------------
@@ -107,17 +108,17 @@ font_button.addEventListener('click', async () => {
 background_color_button.addEventListener('click', async (event) => {
 
     // Show the 'Color Picker' dialog to allow user to pick a color.
-    const new_color = await puter.showColorPicker();
+    const new_color = await puter.ui.showColorPicker();
 
     // If a color was selected in previous step, change the editor background to it
-    if(new_color)
+    if(new_color){
         
         // Set editor background color
         editor.style.backgroundColor = new_color;
 
         // Save setting
-        puter.setItem("bg-color", new_color);
-
+        puter.kv.set("bg-color", new_color);
+    }
 });
 
 //----------------------------------------------------
@@ -126,16 +127,37 @@ background_color_button.addEventListener('click', async (event) => {
 font_color_button.addEventListener('click', async (event) => {
 
     // Show the 'Color Picker' dialog to allow user to pick a color.
-    const new_color = await puter.showColorPicker();
+    const new_color = await puter.ui.showColorPicker();
 
     // If a color was selected in previous step, change the editor background to it
-    if(new_color)
+    if(new_color){
 
         // Set editor font color
         editor.style.color = new_color;
 
         // Save setting
-        puter.setItem("color", new_color);
+        puter.kv.set("color", new_color);
+    }
+});
+
+//----------------------------------------------------
+// 'Speak' button clicked
+//----------------------------------------------------
+speak_button.addEventListener('click', async (event) => {
+
+    // get editor content
+    const text = editor.value;
+
+    // check if the editor is empty
+    if(text.trim() === ''){
+        puter.ui.alert('The editor is empty!');
+        return;
+    }
+
+    // Speak the content of the editor
+    puter.ai.txt2speech(text).then((audio)=>{
+        audio.play();
+    });
 
 });
 
@@ -165,7 +187,7 @@ exit_button.addEventListener('click', async (event) => {
 attempt_exit = function() {
     // If there are any unsaved changes, prompt the user to save the file before closing the window
     if (unsaved_changes) {
-        puter.alert('You have unsaved changes! Exit anyway?', [
+        puter.ui.alert('You have unsaved changes! Exit anyway?', [
             {
                 label: 'Exit',
                 value: 'exit',
@@ -205,6 +227,6 @@ attempt_exit = function() {
 
 // Set a handler that is called right before this app's window is about to close.
 // For example, when user clicks the close button ('X') on the window.
-puter.onWindowClose(function(){
+puter.ui.onWindowClose(function(){
     attempt_exit();
 })
